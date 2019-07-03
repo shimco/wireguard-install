@@ -103,12 +103,14 @@ fi
 
 # Make sure the directory exists (this does not seem the be the case on fedora)
 mkdir /etc/wireguard > /dev/null 2>&1
+# Secure wireguard folder
+umask 077 /etc/wireguard/
 
 # Generate key pair for the server
 SERVER_PRIV_KEY=$(wg genkey)
 SERVER_PUB_KEY=$(echo "$SERVER_PRIV_KEY" | wg pubkey)
 
-# Generate key pair for the server
+# Generate key pair for client1
 CLIENT_PRIV_KEY=$(wg genkey)
 CLIENT_PUB_KEY=$(echo "$CLIENT_PRIV_KEY" | wg pubkey)
 
@@ -147,6 +149,7 @@ case "$IS_PRE_SYMM" in
 esac
 
 chmod 600 -R /etc/wireguard/
+
 
 # Enable routing on the server
 echo "net.ipv4.ip_forward = 1
