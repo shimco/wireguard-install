@@ -22,15 +22,16 @@ fi
 # Check OS version
 if [[ -e /etc/debian_version ]]; then
     source /etc/os-release
-    OS=$ID # debian or ubuntu
+    OS=$ID # debian, raspbian or ubuntu
 elif [[ -e /etc/fedora-release ]]; then
     OS=fedora
 elif [[ -e /etc/centos-release ]]; then
     OS=centos
 elif [[ -e /etc/arch-release ]]; then
     OS=arch
+    
 else
-    echo "Looks like you aren't running this installer on a Debian, Ubuntu, Fedora, CentOS or Arch Linux system"
+    echo "Looks like you aren't running this installer on a Debian, Raspbian, Ubuntu, Fedora, CentOS or Arch Linux system"
     exit 1
 fi
 
@@ -63,8 +64,8 @@ read -rp "Client's WireGuard IPv6 " -e -i "$CLIENT_WG_IPV6" CLIENT_WG_IPV6
 # Adguard DNS by default
 CLIENT_DNS_1="176.103.130.130"
 read -rp "First DNS resolver to use for the client: " -e -i "$CLIENT_DNS_1" CLIENT_DNS_1
-
-CLIENT_DNS_2="176.103.130.131"
+# Cloudflare DNS
+CLIENT_DNS_2="1.1.1.1"
 read -rp "Second DNS resolver to use for the client: " -e -i "$CLIENT_DNS_2" CLIENT_DNS_2
 
 # Ask for pre-shared symmetric key
@@ -90,6 +91,17 @@ elif [[ "$OS" = 'debian' ]]; then
     printf 'Package: *\nPin: release a=unstable\nPin-Priority: 90\n' > /etc/apt/preferences.d/limit-unstable
     apt update
     apt install wireguard
+    
+elif [[ "$OS" = 'raspbian' ]]; then
+    apt-get update
+    apt-get upgrade 
+    apt-get install raspberrypi-kernel-headers
+    echo "deb http://deb.debian.org/debian/ unstable main" | sudo tee --append /etc/apt/sources.list.d/unstable.list
+    sudo apt-get install dirmngr 
+    apt-key adv --keyserver   keyserver.ubuntu.com --recv-keys 8B48AD6246925553 
+    printf 'Package: *\nPin: release a=unstable\nPin-Priority: 150\n' | sudo tee --append /etc/apt/preferences.d/limit-unstable
+    apt-get update
+    apt-get install wireguard 
 elif [[ "$OS" = 'fedora' ]]; then
     dnf copr enable jdoss/wireguard
     dnf install wireguard-dkms wireguard-tools
